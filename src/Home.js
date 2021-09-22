@@ -23,7 +23,7 @@
  */
 
 import React, { useEffect, useState, useContext } from 'react'
-import { Box, ComponentsProvider, Divider, SpaceVertical, Heading } from '@looker/components'
+import { Box, ComponentsProvider, Divider, SpaceVertical, Heading, ProgressCircular } from '@looker/components'
 import { ExtensionContext } from '@looker/extension-sdk-react'
 import { FilterBar } from './FilterBar'
 import { FormattedTable } from './Table'
@@ -31,12 +31,14 @@ export const Home = () => {
   const { core40SDK } = useContext(ExtensionContext)
   const [message, setMessage] = useState()
   const [queryResults, setQueryResults] = useState(undefined)
+  const [queryStatus, setQueryStatus] = useState(undefined)
+  const [mostRecentExecutedQuery, setMostRecentExecutedQuery] = useState(undefined)
 
 
   const executeQuery = async ({ newQuery, resultFormat }) => {
-    // console.log("executeQuery")
-    // console.log({ newQuery, resultFormat })
     try {
+      setQueryStatus('running');
+      setMostRecentExecutedQuery(JSON.stringify(newQuery))
       let timer = Date.now();
 
       let lookerCreateQueryResponseData = await core40SDK.ok(core40SDK.create_query(newQuery))
@@ -57,15 +59,15 @@ export const Home = () => {
         }));
         if (lookerCheckTaskResponseData.status === 'complete') {
           clearInterval(taskInterval);
-          // setApiContent(lookerCheckTaskResponseData)
-          // setServerSideCode(lookerCreateTaskResponseData.code)
+          setQueryStatus('complete')
           setQueryResults(lookerCheckTaskResponseData)
         }
 
         //time out after 30 seconds
         if ((timer + (30 * 1000)) < Date.now()) {
           clearInterval()
-          setApiContent([])
+          setQueryResults(undefined)
+          setQueryStatus(undefined)
         }
       }, 1000)
     } catch (error) {
@@ -74,16 +76,29 @@ export const Home = () => {
     }
   }
 
+
   return (
     <>
       <ComponentsProvider>
         <Box>
           <FilterBar
             executeQuery={executeQuery}
+            queryStatus={queryStatus}
           />
           <Divider />
-          {queryResults ? <FormattedTable queryResults={queryResults}></FormattedTable> :
-            <SpaceVertical m="large"><Heading>Press submit!</Heading></SpaceVertical>}
+
+
+          {queryStatus === undefined ?
+            <SpaceVertical m="large"><Heading>Press submit to see results</Heading></SpaceVertical> :
+            queryStatus === 'running' ?
+              <SpaceVertical m="large"><Heading>Query executing!</Heading>
+                <ProgressCircular />
+              </SpaceVertical>
+              : queryStatus === 'complete' && queryResults ? <FormattedTable queryResults={queryResults}></FormattedTable>
+                : ""
+
+          }
+
         </Box>
       </ComponentsProvider>
     </>

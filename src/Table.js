@@ -27,8 +27,6 @@ import { startCase } from 'lodash'
 import { Table, TableHead, TableRow, TableHeaderCell, TableBody, TableDataCell } from '@looker/components'
 
 export const FormattedTable = ({ queryResults }) => {
-  // console.log("FormattedTable")
-  // console.log({ queryResults })
   const { data } = queryResults
 
   return (

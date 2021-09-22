@@ -27,7 +27,7 @@ import { Space, ComponentsProvider, Text, Chip, Row, SpaceVertical, Heading, Box
 import { ExtensionContext } from '@looker/extension-sdk-react'
 import { content } from './StaticContent';
 import { startCase, find } from 'lodash'
-export const FilterBar = ({ executeQuery }) => {
+export const FilterBar = ({ executeQuery, queryStatus }) => {
   const { queryBody, fieldType } = content;
 
   let measuresArr = [];
@@ -48,7 +48,7 @@ export const FilterBar = ({ executeQuery }) => {
   })
 
   const [measures, setMeasures] = useState(measuresArr)
-  const [dimensions, setDimensions] = useState(dimensionsArr)
+  const [dimensions, setDimensions] = useState(dimensionsArr);
   const measuresHelper = (target, e) => {
     var newMeasuresArr = measures.map((measure) => {
       return target.label === measure.label ? { ...target, selected: !target.selected } : measure;
@@ -63,6 +63,12 @@ export const FilterBar = ({ executeQuery }) => {
   }
 
   const runQueryHelper = () => {
+    let queryCopy = assembleQuery();
+    executeQuery({ newQuery: queryCopy, resultFormat: content.resultFormat || "json" })
+
+  }
+
+  const assembleQuery = () => {
     let queryCopy = { ...queryBody };
 
     let selectedDimensions = dimensions.map(dimension => {
@@ -75,10 +81,9 @@ export const FilterBar = ({ executeQuery }) => {
     let selectedFields = [...selectedDimensions, ...selectedMeasures]
 
     queryCopy.fields = selectedFields;
-    executeQuery({ newQuery: queryCopy, resultFormat: content.resultFormat || "json" })
+    return queryCopy;
 
   }
-
 
   return (
     <>
@@ -91,7 +96,7 @@ export const FilterBar = ({ executeQuery }) => {
               <Chip key={measure.key}
                 selected={measure.selected}
                 onClick={(e) => measuresHelper(measure, e)}
-                style={{ opacity: measure.selected ? 1 : .5 }}>{measure.label}</Chip>
+                style={{ opacity: measure.selected ? 1 : .25 }}>{measure.label}</Chip>
             )
           })}
         </Space>
@@ -106,13 +111,13 @@ export const FilterBar = ({ executeQuery }) => {
               <Chip key={dimension.key}
                 selected={dimension.selected}
                 onClick={(e) => dimensionsHelper(dimension, e)}
-                style={{ opacity: dimension.selected ? 1 : .5 }}>{dimension.label}</Chip>
+                style={{ opacity: dimension.selected ? 1 : .25 }}>{dimension.label}</Chip>
             )
           })}
         </Space>
       </SpaceVertical>
       <SpaceVertical m="large">
-        <Button onClick={runQueryHelper}>Submit</Button>
+        <Button onClick={runQueryHelper} disabled={queryStatus === 'running' ? true : false}>Submit</Button>
       </SpaceVertical>
     </>
   )
