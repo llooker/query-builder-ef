@@ -26,7 +26,7 @@ import React, { useEffect, useState, useContext } from 'react'
 import { Box, ComponentsProvider, Divider, SpaceVertical, Heading } from '@looker/components'
 import { ExtensionContext } from '@looker/extension-sdk-react'
 import { FilterBar } from './FilterBar'
-import { Table } from './Table'
+import { FormattedTable } from './Table'
 export const Home = () => {
   const { core40SDK } = useContext(ExtensionContext)
   const [message, setMessage] = useState()
@@ -37,6 +37,7 @@ export const Home = () => {
     // console.log("executeQuery")
     // console.log({ newQuery, resultFormat })
     try {
+      let timer = Date.now();
 
       let lookerCreateQueryResponseData = await core40SDK.ok(core40SDK.create_query(newQuery))
       let lookerCreateTaskResponseData = await core40SDK.ok(core40SDK.create_query_task({
@@ -54,7 +55,6 @@ export const Home = () => {
             'Content-Type': 'application/json'
           }
         }));
-        console.log({ lookerCheckTaskResponseData })
         if (lookerCheckTaskResponseData.status === 'complete') {
           clearInterval(taskInterval);
           // setApiContent(lookerCheckTaskResponseData)
@@ -82,8 +82,8 @@ export const Home = () => {
             executeQuery={executeQuery}
           />
           <Divider />
-          {queryResults ? <Table queryResults={queryResults}></Table> :
-            <SpaceVertical m="large"><Heading>Run query Newb!</Heading></SpaceVertical>}
+          {queryResults ? <FormattedTable queryResults={queryResults}></FormattedTable> :
+            <SpaceVertical m="large"><Heading>Press submit!</Heading></SpaceVertical>}
         </Box>
       </ComponentsProvider>
     </>

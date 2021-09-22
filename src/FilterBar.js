@@ -28,8 +28,6 @@ import { ExtensionContext } from '@looker/extension-sdk-react'
 import { content } from './StaticContent';
 import { startCase, find } from 'lodash'
 export const FilterBar = ({ executeQuery }) => {
-  console.log("FilterBar")
-  console.log({ executeQuery })
   const { queryBody, fieldType } = content;
 
   let measuresArr = [];

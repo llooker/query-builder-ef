@@ -31,4 +31,3 @@ This example has been adopted from the extension-examples helloworld example.
 
    The extension is now running and serving the JavaScript locally at http://localhost:8080/bundle.js.
 
-## Skipping project creation steps

@@ -23,12 +23,55 @@
  */
 
 import React from 'react'
-import { Paragraph } from '@looker/components'
+import { startCase } from 'lodash'
+import { Table, TableHead, TableRow, TableHeaderCell, TableBody, TableDataCell } from '@looker/components'
 
-export const Table = ({ queryResults }) => {
-  console.log("Table")
-  console.log({ queryResults })
+export const FormattedTable = ({ queryResults }) => {
+  // console.log("FormattedTable")
+  // console.log({ queryResults })
+  const { data } = queryResults
+
   return (
-    <Paragraph>{JSON.stringify(queryResults.data)}</Paragraph>
+    <Table>
+      <FormattedTableHead data={data} />
+      <FormattedTableBody data={data} />
+    </Table >
+  )
+}
+
+const FormattedTableHead = ({ data }) => {
+  return (
+
+    <TableHead>
+      <TableRow>
+        {Object.keys(data[0]).map((key, index) => {
+          let labelToUse = startCase(key.substring(key.lastIndexOf('.') + 1, key.length).replaceAll("_", " "))
+
+          return (
+            < TableHeaderCell key={`TableHeaderCell-${index}`}> {labelToUse}</TableHeaderCell>
+          )
+        })}
+      </TableRow>
+    </TableHead>
+  )
+}
+
+const FormattedTableBody = ({ data }) => {
+  return (
+    <TableBody>
+      {data.map((row, rowIndex) => {
+        return (
+          <TableRow key={`TableRow-${rowIndex}`}>
+            {Object.keys(row).map((key, cellIndex) => {
+              return (
+                <TableDataCell key={`TableDataCell-${rowIndex}-${cellIndex}`} >
+                  { row[key].value}
+                </TableDataCell>
+              )
+            })}
+          </TableRow>
+        )
+      })}
+    </TableBody >
   )
 }
