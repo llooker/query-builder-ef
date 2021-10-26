@@ -23,7 +23,6 @@
  */
 
 import React from 'react'
-import { HelloWorld } from './HelloWorld'
 import { Home } from './Home'
 import { ExtensionProvider } from '@looker/extension-sdk-react'
 import { hot } from 'react-hot-loader/root'

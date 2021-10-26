@@ -85,6 +85,13 @@ export const FilterBar = ({ executeQuery, queryStatus }) => {
 
   }
 
+  useEffect(() => {
+    if (queryStatus === undefined) {
+      let queryCopy = assembleQuery();
+      executeQuery({ newQuery: queryCopy, resultFormat: content.resultFormat || "json" })
+    }
+  }, [])
+
   return (
     <>
       {/* measures */}
