@@ -22,17 +22,23 @@
  * THE SOFTWARE.
  */
 
-import React from 'react'
+import React, { useState } from 'react'
 import { startCase } from 'lodash'
-import { Table, TableHead, TableRow, TableHeaderCell, TableBody, TableDataCell } from '@looker/components'
+import { Table, TableHead, TableRow, TableHeaderCell, TableBody, TableDataCell, TableFoot, Pagination } from '@looker/components'
 
 export const FormattedTable = ({ queryResults }) => {
   const { data } = queryResults
-
+  const [currentPage, setCurrentPage] = useState(1)
+  const rowsPerPage = 25;
+  const totalPages = Math.ceil(data.length / rowsPerPage);
+  const sliceStartValue = currentPage == 1 ? 0 : (currentPage - 1) * rowsPerPage;
+  const sliceEndValue = currentPage == 1 ? 26 : (currentPage) * rowsPerPage + 1;
+  const dataSubArray = data.slice(sliceStartValue, sliceEndValue)
   return (
     <Table>
       <FormattedTableHead data={data} />
-      <FormattedTableBody data={data} />
+      <FormattedTableBody data={dataSubArray} />
+      <TablePagination currentPage={currentPage} setCurrentPage={setCurrentPage} totalPages={totalPages} />
     </Table >
   )
 }
@@ -63,7 +69,7 @@ const FormattedTableBody = ({ data }) => {
             {Object.keys(row).map((key, cellIndex) => {
               return (
                 <TableDataCell key={`TableDataCell-${rowIndex}-${cellIndex}`} >
-                  { row[key].value}
+                  { parseInt(row[key].value) ? parseInt(row[key].value) : row[key].value}
                 </TableDataCell>
               )
             })}
@@ -72,4 +78,13 @@ const FormattedTableBody = ({ data }) => {
       })}
     </TableBody >
   )
+}
+
+const TablePagination = ({ currentPage, setCurrentPage, totalPages }) => {
+  return (
+    <Pagination
+      current={currentPage}
+      pages={totalPages}
+      onChange={setCurrentPage}
+    />)
 }

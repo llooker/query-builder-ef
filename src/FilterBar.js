@@ -28,27 +28,36 @@ import { ExtensionContext } from '@looker/extension-sdk-react'
 import { content } from './StaticContent';
 import { startCase, find } from 'lodash'
 export const FilterBar = ({ executeQuery, queryStatus }) => {
-  const { queryBody, fieldType } = content;
-
+  const { queryBody, fieldType, customFieldMeasureDimensionMapper, dynamicFieldMeasureTemplate, dynamicFieldsDimensions, dynamicFieldsMeasuresFilterExpressions } = content;
   let measuresArr = [];
   let dimensionsArr = [];
+  let customFieldsArr = [];
   queryBody.fields.map(field => {
-    let labelToUse = startCase(field.substring(field.lastIndexOf('.') + 1, field.length).replaceAll("_", " "))
-    if (fieldType[field] && fieldType[field] === "measure") measuresArr.push({
-      key: field,
-      label: labelToUse,
-      selected: true
-    })
-    else if (fieldType[field] && fieldType[field] === "dimension") dimensionsArr.push({
-      key: field,
-      label: labelToUse,
-      selected: true
+    let label = startCase(field.substring(field.lastIndexOf('.') + 1, field.length).replaceAll("_", " "))
+    if (fieldType[field] && fieldType[field] === "measure") {
+      measuresArr.push({
+        key: field,
+        label: label,
+        selected: true
+      })
+    } else if (fieldType[field] && fieldType[field] === "dimension") {
+      dimensionsArr.push({
+        key: field,
+        label: label,
+        selected: true
+      })
+    } else if (fieldType[field] && fieldType[field] === "custom_field") {
+      customFieldsArr.push({
+        key: field,
+        label: label,
+        selected: true
+      })
     }
-    )
   })
 
   const [measures, setMeasures] = useState(measuresArr)
   const [dimensions, setDimensions] = useState(dimensionsArr);
+  const [customFields, setCustomFields] = useState(customFieldsArr);
   const measuresHelper = (target, e) => {
     var newMeasuresArr = measures.map((measure) => {
       return target.label === measure.label ? { ...target, selected: !target.selected } : measure;
@@ -61,30 +70,74 @@ export const FilterBar = ({ executeQuery, queryStatus }) => {
     });
     setDimensions(newDimensionsArr)
   }
+  const customFieldsHelper = (target, e) => {
+    var newCustomFieldsArr = customFields.map((customField) => {
+      return target.label === customField.label ? { ...target, selected: !target.selected } : customField;
+    });
+    setCustomFields(newCustomFieldsArr)
+  }
 
   const runQueryHelper = () => {
     let queryCopy = assembleQuery();
     executeQuery({ newQuery: queryCopy, resultFormat: content.resultFormat || "json" })
-
   }
 
   const assembleQuery = () => {
+
     let queryCopy = { ...queryBody };
 
     let selectedDimensions = dimensions.map(dimension => {
       if (dimension.selected) return dimension.key
-    })
+    }).filter(item => item !== undefined)
     let selectedMeasures = measures.map(measure => {
       if (measure.selected) return measure.key
+    }).filter(item => item !== undefined)
 
-    })
-    let selectedFields = [...selectedDimensions, ...selectedMeasures]
 
+    let selectedCustomFields = customFields.map(customField => {
+      if (customField.selected) return customField.key
+    }).filter(item => item !== undefined)
+
+    let selectedFields = [...selectedDimensions, ...selectedCustomFields] //necessary
     queryCopy.fields = selectedFields;
-    return queryCopy;
+    ////////
+    let selectedCustomFieldDimensions = selectedCustomFields.map(item => {
+      return customFieldMeasureDimensionMapper[item]
+    }).filter(item => item !== undefined)
 
+    let selectedDynamicFieldsDimensions = []
+    selectedCustomFieldDimensions.map(scfd => {
+      dynamicFieldsDimensions.map(dfd => {
+        if (dfd.dimension === scfd) {
+          selectedDynamicFieldsDimensions.push(dfd)
+        }
+      })
+    })
+
+    let dynamicFieldsMeasures = []
+    selectedCustomFields.map(cf => {
+      selectedMeasures.map(sm => {
+        let copy = { ...dynamicFieldMeasureTemplate }
+        copy.measure = cf;
+        copy.based_on = sm;
+        copy.type = "count_distinct";
+        copy.label = startCase(cf.replaceAll("_", " "));
+        copy.value_format = null;
+        copy.value_format_name = null;
+        copy._kind_hint = "measure"
+        copy._type_hint = "number"
+        copy.filter_expression = dynamicFieldsMeasuresFilterExpressions[cf]
+        dynamicFieldsMeasures.push(copy)
+      })
+    })
+
+    let dynamicFields = [...dynamicFieldsMeasures, ...selectedDynamicFieldsDimensions];
+
+    queryCopy.dynamic_fields = JSON.stringify(dynamicFields);
+    return queryCopy;
   }
 
+  // onload
   useEffect(() => {
     if (queryStatus === undefined) {
       let queryCopy = assembleQuery();
@@ -94,9 +147,37 @@ export const FilterBar = ({ executeQuery, queryStatus }) => {
 
   return (
     <>
-      {/* measures */}
       <SpaceVertical m="large">
-        <Heading>Select Metrics:</Heading>
+        <Heading>Breakdown:</Heading>
+        <Space gap="u1">
+          {dimensions.map((dimension, index) => {
+            return (
+              <Chip key={dimension.key}
+                selected={dimension.selected}
+                onClick={(e) => dimensionsHelper(dimension, e)}
+                style={{ opacity: dimension.selected ? 1 : .25 }}>{dimension.label}</Chip>
+            )
+          })}
+        </Space>
+      </SpaceVertical>
+
+      <SpaceVertical m="large">
+        <Heading>Period:</Heading>
+        <Space gap="u1">
+          {customFields.map((customField, index) => {
+            return (
+              <Chip key={customField.key}
+                selected={customField.selected}
+                onClick={(e) => customFieldsHelper(customField, e)}
+                style={{ opacity: customField.selected ? 1 : .25 }}>{customField.label}</Chip>
+            )
+          })}
+        </Space>
+      </SpaceVertical>
+
+
+      <SpaceVertical m="large">
+        <Heading>Metrics:</Heading>
         <Space gap="u1">
           {measures.map((measure, index) => {
             return (
@@ -109,20 +190,7 @@ export const FilterBar = ({ executeQuery, queryStatus }) => {
         </Space>
       </SpaceVertical>
 
-      {/* dimensions */}
-      <SpaceVertical m="large">
-        <Heading>Group By:</Heading>
-        <Space gap="u1">
-          {dimensions.map((dimension, index) => {
-            return (
-              <Chip key={dimension.key}
-                selected={dimension.selected}
-                onClick={(e) => dimensionsHelper(dimension, e)}
-                style={{ opacity: dimension.selected ? 1 : .25 }}>{dimension.label}</Chip>
-            )
-          })}
-        </Space>
-      </SpaceVertical>
+
       <SpaceVertical m="large">
         <Button onClick={runQueryHelper} disabled={queryStatus === 'running' ? true : false}>Submit</Button>
       </SpaceVertical>

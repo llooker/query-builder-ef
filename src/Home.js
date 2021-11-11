@@ -55,6 +55,9 @@ export const Home = () => {
 
 
   const executeQuery = async ({ newQuery, resultFormat }) => {
+    // console.log("executeQuery")
+    // console.log({ newQuery })
+    // console.log({ resultFormat })
     try {
       setQueryStatus('running');
       setMostRecentExecutedQuery(JSON.stringify(newQuery))
@@ -67,7 +70,6 @@ export const Home = () => {
           result_format: resultFormat || 'json_detail'
         }
       }))
-
       let taskInterval = setInterval(async () => {
         let lookerCheckTaskResponseData = await core40SDK.ok(core40SDK.query_task_results(lookerCreateTaskResponseData.id, {
           method: 'GET',
@@ -84,6 +86,8 @@ export const Home = () => {
 
         //time out after 30 seconds
         if ((timer + (30 * 1000)) < Date.now()) {
+          let killQuery = await core40SDK.ok(core40SDK.kill_query(lookerCreateTaskResponseData.id))
+
           clearInterval()
           setQueryResults(undefined)
           setQueryStatus(undefined)
@@ -95,6 +99,9 @@ export const Home = () => {
     }
   }
 
+  useEffect(() => {
+    console.log({ queryResults })
+  }, [queryResults])
 
   return (
     <>
