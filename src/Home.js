@@ -34,30 +34,8 @@ export const Home = () => {
   const [queryStatus, setQueryStatus] = useState(undefined)
   const [mostRecentExecutedQuery, setMostRecentExecutedQuery] = useState(undefined)
 
-  // const initialQuery = {
-  //   "model": "atom_fashion",
-  //   "view": "order_items",
-  //   "fields": ["order_items.created_month", "order_items.created_date", "order_items.created_week", "users.city", "users.state", "users.country", "products.category_type", "products.category", "products.brand", "order_items.total_sale_price", "order_items.total_tax_amount"],
-  //   "filters": {
-  //     "users.state": "",
-  //     "users.city": "",
-  //     "users.country": "",
-  //     "order_items.created_date": "6 months"
-  //   },
-  //   "limit": 500
-  // }
-
-  // useEffect(() => {
-  //   if (queryResults === undefined) {
-  //     executeQuery({ newQuery: initialQuery, resultFormat: "json" })
-  //   }
-  // }, [])
-
 
   const executeQuery = async ({ newQuery, resultFormat }) => {
-    // console.log("executeQuery")
-    // console.log({ newQuery })
-    // console.log({ resultFormat })
     try {
       setQueryStatus('running');
       setMostRecentExecutedQuery(JSON.stringify(newQuery))
@@ -99,9 +77,9 @@ export const Home = () => {
     }
   }
 
-  useEffect(() => {
-    console.log({ queryResults })
-  }, [queryResults])
+  // useEffect(() => {
+  //   console.log({ queryResults })
+  // }, [queryResults])
 
   return (
     <>
@@ -112,8 +90,6 @@ export const Home = () => {
             queryStatus={queryStatus}
           />
           <Divider />
-
-
           {queryStatus === undefined ?
             <SpaceVertical m="large"><Heading>Press submit to see results</Heading></SpaceVertical> :
             queryStatus === 'running' ?

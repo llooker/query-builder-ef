@@ -24,7 +24,7 @@
 
 import React, { useState } from 'react'
 import { startCase } from 'lodash'
-import { Table, TableHead, TableRow, TableHeaderCell, TableBody, TableDataCell, TableFoot, Pagination } from '@looker/components'
+import { Table, TableHead, TableRow, TableHeaderCell, TableBody, TableDataCell, Pagination, Box, SpaceVertical, Space } from '@looker/components'
 
 export const FormattedTable = ({ queryResults }) => {
   const { data } = queryResults
@@ -35,11 +35,13 @@ export const FormattedTable = ({ queryResults }) => {
   const sliceEndValue = currentPage == 1 ? 26 : (currentPage) * rowsPerPage + 1;
   const dataSubArray = data.slice(sliceStartValue, sliceEndValue)
   return (
-    <Table>
-      <FormattedTableHead data={data} />
-      <FormattedTableBody data={dataSubArray} />
+    <>
+      <Table>
+        <FormattedTableHead data={data} />
+        <FormattedTableBody data={dataSubArray} />
+      </Table >
       <TablePagination currentPage={currentPage} setCurrentPage={setCurrentPage} totalPages={totalPages} />
-    </Table >
+    </>
   )
 }
 
@@ -49,10 +51,10 @@ const FormattedTableHead = ({ data }) => {
     <TableHead>
       <TableRow>
         {Object.keys(data[0]).map((key, index) => {
-          let labelToUse = startCase(key.substring(key.lastIndexOf('.') + 1, key.length).replaceAll("_", " "))
+          let label = startCase(key.substring(key.lastIndexOf('.') + 1, key.length).replaceAll("_", " "))
 
           return (
-            < TableHeaderCell key={`TableHeaderCell-${index}`}> {labelToUse}</TableHeaderCell>
+            < TableHeaderCell key={`TableHeaderCell-${index}`}> {label}</TableHeaderCell>
           )
         })}
       </TableRow>
@@ -86,5 +88,6 @@ const TablePagination = ({ currentPage, setCurrentPage, totalPages }) => {
       current={currentPage}
       pages={totalPages}
       onChange={setCurrentPage}
-    />)
+    />
+  )
 }

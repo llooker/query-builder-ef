@@ -28,7 +28,7 @@ import { ExtensionContext } from '@looker/extension-sdk-react'
 import { content } from './StaticContent';
 import { startCase, find } from 'lodash'
 export const FilterBar = ({ executeQuery, queryStatus }) => {
-  const { queryBody, fieldType, customFieldMeasureDimensionMapper, dynamicFieldMeasureTemplate, dynamicFieldsDimensions, dynamicFieldsMeasuresFilterExpressions } = content;
+  const { queryBody, fieldType, dynamicFieldsDimensions, dynamicFieldMeasureTemplate, dynamicFieldsMeasuresFilterExpressions } = content;
   let measuresArr = [];
   let dimensionsArr = [];
   let customFieldsArr = [];
@@ -92,36 +92,25 @@ export const FilterBar = ({ executeQuery, queryStatus }) => {
     let selectedMeasures = measures.map(measure => {
       if (measure.selected) return measure.key
     }).filter(item => item !== undefined)
-
-
     let selectedCustomFields = customFields.map(customField => {
       if (customField.selected) return customField.key
     }).filter(item => item !== undefined)
 
-    let selectedFields = [...selectedDimensions, ...selectedCustomFields] //necessary
-    queryCopy.fields = selectedFields;
-    ////////
-    let selectedCustomFieldDimensions = selectedCustomFields.map(item => {
-      return customFieldMeasureDimensionMapper[item]
-    }).filter(item => item !== undefined)
-
-    let selectedDynamicFieldsDimensions = []
-    selectedCustomFieldDimensions.map(scfd => {
-      dynamicFieldsDimensions.map(dfd => {
-        if (dfd.dimension === scfd) {
-          selectedDynamicFieldsDimensions.push(dfd)
-        }
-      })
+    let selectedDynamicFieldsDimensions = selectedCustomFields.map(item => {
+      return dynamicFieldsDimensions[item]
     })
-
-    let dynamicFieldsMeasures = []
+    let dynamicFieldsMeasures = [];
+    let measuresArr = [];
     selectedCustomFields.map(cf => {
       selectedMeasures.map(sm => {
+        let label = startCase(cf.replaceAll("_", " ") + sm.substring(sm.lastIndexOf('.') + 1, sm.length).replaceAll("_", " "))
+        let measure = cf + "_" + sm.substring(sm.lastIndexOf('.') + 1, sm.length);
+        measuresArr.push(measure)
         let copy = { ...dynamicFieldMeasureTemplate }
-        copy.measure = cf;
+        copy.measure = measure;
         copy.based_on = sm;
         copy.type = "count_distinct";
-        copy.label = startCase(cf.replaceAll("_", " "));
+        copy.label = label;
         copy.value_format = null;
         copy.value_format_name = null;
         copy._kind_hint = "measure"
@@ -131,8 +120,10 @@ export const FilterBar = ({ executeQuery, queryStatus }) => {
       })
     })
 
-    let dynamicFields = [...dynamicFieldsMeasures, ...selectedDynamicFieldsDimensions];
+    let selectedFields = [...selectedDimensions, ...measuresArr]
+    queryCopy.fields = selectedFields;
 
+    let dynamicFields = [...dynamicFieldsMeasures, ...selectedDynamicFieldsDimensions];
     queryCopy.dynamic_fields = JSON.stringify(dynamicFields);
     return queryCopy;
   }
