@@ -1,7 +1,7 @@
 export const content = {
   "queryBody": {
     "view": "order_items",
-    "fields": ["users.country", "users.state", "products.category", "products.sku", "users.gender", "order_items.total_sale_price", "order_items.total_returns", "order_items.total_tax_amount", "this_year", "this_month", "last_month",],
+    "fields": ["users.country", "users.state", "products.category", "products.sku", "users.gender", "order_items.total_sale_price", "order_items.total_returns", "order_items.total_tax_amount", "this_year", "this_month", "last_month"],
     "limit": "500",
     "dynamic_fields": "[{\"measure\":\"this_year\",\"based_on\":\"order_items.total_sale_price\",\"type\":\"count_distinct\",\"label\":\"This Year\",\"value_format\":null,\"value_format_name\":null,\"_kind_hint\":\"measure\",\"_type_hint\":\"number\",\"filter_expression\":\"${is_current_year} = yes\"},{\"measure\":\"this_month\",\"based_on\":\"order_items.total_sale_price\",\"type\":\"count_distinct\",\"label\":\"This Month\",\"value_format\":null,\"value_format_name\":null,\"_kind_hint\":\"measure\",\"_type_hint\":\"number\",\"filter_expression\":\"${is_current_month} = yes AND ${is_current_year} = yes\"},{\"measure\":\"last_month\",\"based_on\":\"order_items.total_sale_price\",\"type\":\"count_distinct\",\"label\":\"Last Month\",\"value_format\":null,\"value_format_name\":null,\"_kind_hint\":\"measure\",\"_type_hint\":\"number\",\"filter_expression\":\"${is_last_month} = yes\"},{\"dimension\":\"is_current_year\",\"label\":\"Is Current Year\",\"expression\":\"extract_years(${order_items.created_date}) = extract_years(now())\",\"value_format\":null,\"value_format_name\":null,\"_kind_hint\":\"dimension\",\"_type_hint\":\"yesno\"},{\"dimension\":\"is_current_month\",\"label\":\"Is Current Month\",\"expression\":\"extract_months(${order_items.created_date})\\t= extract_months(now())\",\"value_format\":null,\"value_format_name\":null,\"_kind_hint\":\"dimension\",\"_type_hint\":\"yesno\"},{\"dimension\":\"is_last_month\",\"label\":\"Is Last Month\",\"expression\":\"if(extract_months(now()) = 1, \\n  extract_months(${order_items.created_date})\\t= 12 AND extract_days(${order_items.created_date})\\t< extract_days(now())\\n  , \\nextract_months(${order_items.created_date})\\t= extract_months(now()) - 1 AND extract_days(${order_items.created_date})\\t< extract_days(now()))\\n\",\"value_format\":null,\"value_format_name\":null,\"_kind_hint\":\"dimension\",\"_type_hint\":\"yesno\"}]",
     "query_timezone": "America/Los_Angeles",
@@ -63,7 +63,7 @@ export const content = {
   },
   "dynamicFieldsMeasuresFilterExpressions": {
     "this_year": "${is_current_year} = yes",
-    "this_month": "${is_current_month} = yes AND ${is_current_year} = yes",
+    "this_month": "${is_current_month} = yes", // AND ${is_current_year} = yes //for now
     "last_month": "${is_last_month} = yes"
   }
 }
