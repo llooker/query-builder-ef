@@ -23,36 +23,43 @@
  */
 
 import React, { useEffect, useState, useContext } from 'react'
-import { Space, ComponentsProvider, Text, Chip, Row, SpaceVertical, Heading, Box, Button } from '@looker/components'
+import { Space, ComponentsProvider, Text, Chip, SpaceVertical, Heading, Button } from '@looker/components'
 import { ExtensionContext } from '@looker/extension-sdk-react'
 import { content } from './StaticContent';
-import { startCase, find } from 'lodash'
+import { startCase, find, lowerCase } from 'lodash'
 export const FilterBar = ({ executeQuery, queryStatus }) => {
-  const { queryBody, fieldType, dynamicFieldsDimensions, dynamicFieldMeasureTemplate, dynamicFieldsMeasuresFilterExpressions } = content;
+  const { queryBody,
+    dynamicFieldsDimensions,
+    dynamicFieldMeasureTemplate,
+    dynamicFieldsMeasuresFilterExpressions,
+    initialMeasures, initialDimensions, initialCustomFields } = content;
   let measuresArr = [];
   let dimensionsArr = [];
   let customFieldsArr = [];
-  queryBody.fields.map(field => {
-    let label = startCase(field.substring(field.lastIndexOf('.') + 1, field.length).replaceAll("_", " "))
-    if (fieldType[field] && fieldType[field] === "measure") {
-      measuresArr.push({
-        key: field,
-        label: label,
-        selected: true
-      })
-    } else if (fieldType[field] && fieldType[field] === "dimension") {
-      dimensionsArr.push({
-        key: field,
-        label: label,
-        selected: true
-      })
-    } else if (fieldType[field] && fieldType[field] === "custom_field") {
-      customFieldsArr.push({
-        key: field,
-        label: label,
-        selected: true
-      })
-    }
+
+  initialMeasures.map((measure, index) => {
+    let label = startCase(measure.substring(measure.lastIndexOf('.') + 1, measure.length).replaceAll("_", " "))
+    measuresArr.push({
+      key: measure,
+      label: label,
+      selected: index === 0 ? true : false
+    })
+  })
+  initialDimensions.map((dimension, index) => {
+    let label = startCase(dimension.substring(dimension.lastIndexOf('.') + 1, dimension.length).replaceAll("_", " "))
+    dimensionsArr.push({
+      key: dimension,
+      label: label,
+      selected: index === 0 ? true : false
+    })
+  })
+  initialCustomFields.map((customField, index) => {
+    let label = startCase(customField.substring(customField.lastIndexOf('.') + 1, customField.length).replaceAll("_", " "))
+    customFieldsArr.push({
+      key: customField,
+      label: label,
+      selected: index === 0 ? true : false
+    })
   })
 
   const [measures, setMeasures] = useState(measuresArr)
@@ -60,19 +67,19 @@ export const FilterBar = ({ executeQuery, queryStatus }) => {
   const [customFields, setCustomFields] = useState(customFieldsArr);
   const measuresHelper = (target, e) => {
     var newMeasuresArr = measures.map((measure) => {
-      return target.label === measure.label ? { ...target, selected: !target.selected } : measure;
+      return target.label === measure.label ? { ...target, selected: !target.selected } : { ...measure, selected: false };
     });
     setMeasures(newMeasuresArr)
   }
   const dimensionsHelper = (target, e) => {
     var newDimensionsArr = dimensions.map((dimension) => {
-      return target.label === dimension.label ? { ...target, selected: !target.selected } : dimension;
+      return target.label === dimension.label ? { ...target, selected: !target.selected } : dimension; //allow more than one to be selected
     });
     setDimensions(newDimensionsArr)
   }
   const customFieldsHelper = (target, e) => {
     var newCustomFieldsArr = customFields.map((customField) => {
-      return target.label === customField.label ? { ...target, selected: !target.selected } : customField;
+      return target.label === customField.label ? { ...target, selected: !target.selected } : { ...customField, selected: false };
     });
     setCustomFields(newCustomFieldsArr)
   }
@@ -96,16 +103,25 @@ export const FilterBar = ({ executeQuery, queryStatus }) => {
       if (customField.selected) return customField.key
     }).filter(item => item !== undefined)
 
-    let selectedDynamicFieldsDimensions = selectedCustomFields.map(item => {
-      return dynamicFieldsDimensions[item]
+
+    let selectedDynamicFieldsDimensions = []
+    selectedCustomFields.map(scf => {
+      selectedDynamicFieldsDimensions.push(dynamicFieldsDimensions[scf])
+      if (scf === "this_year") selectedDynamicFieldsDimensions.push(dynamicFieldsDimensions["last_year"])
+      else if (scf === "this_month") selectedDynamicFieldsDimensions.push(dynamicFieldsDimensions["last_month"])
     })
+
     let dynamicFieldsMeasures = [];
-    let measuresArr = [];
-    selectedCustomFields.map(cf => {
+    let measureArrForSelectedFields = [];
+    selectedDynamicFieldsDimensions.map(sdfd => {
       selectedMeasures.map(sm => {
-        let label = startCase(cf.replaceAll("_", " ") + sm.substring(sm.lastIndexOf('.') + 1, sm.length).replaceAll("_", " "))
-        let measure = cf + "_" + sm.substring(sm.lastIndexOf('.') + 1, sm.length);
-        measuresArr.push(measure)
+        let measure = lowerCase(sdfd.label).split(" ").join("_")
+        measure += "_"
+        measure += sm.substring(sm.lastIndexOf('.') + 1, sm.length);
+        measureArrForSelectedFields.push(measure)
+
+        let label = startCase(sdfd.label + " " + sm.substring(sm.lastIndexOf('.') + 1, sm.length).replaceAll("_", " "))
+
         let copy = { ...dynamicFieldMeasureTemplate }
         copy.measure = measure;
         copy.based_on = sm;
@@ -115,12 +131,12 @@ export const FilterBar = ({ executeQuery, queryStatus }) => {
         copy.value_format_name = null;
         copy._kind_hint = "measure"
         copy._type_hint = "number"
-        copy.filter_expression = dynamicFieldsMeasuresFilterExpressions[cf]
+        copy.filter_expression = dynamicFieldsMeasuresFilterExpressions[sdfd.dimension]
         dynamicFieldsMeasures.push(copy)
       })
     })
 
-    let selectedFields = [...selectedDimensions, ...measuresArr]
+    let selectedFields = [...selectedDimensions, ...measureArrForSelectedFields]
     queryCopy.fields = selectedFields;
 
     let dynamicFields = [...dynamicFieldsMeasures, ...selectedDynamicFieldsDimensions];
