@@ -54,11 +54,12 @@ export const FilterBar = ({ executeQuery, queryStatus }) => {
     })
   })
   initialCustomFields.map((customField, index) => {
-    let label = startCase(customField.substring(customField.lastIndexOf('.') + 1, customField.length).replaceAll("_", " "))
+    // let label = startCase(customField.substring(customField.lastIndexOf('.') + 1, customField.length).replaceAll("_", " "))
+    let label = startCase((customField.split("_").slice(-1)))
     customFieldsArr.push({
       key: customField,
-      label: label,
-      selected: index === 0 ? true : false
+      selected: index === 0 ? true : false,
+      label,
     })
   })
 
@@ -100,9 +101,8 @@ export const FilterBar = ({ executeQuery, queryStatus }) => {
       if (measure.selected) return measure.key
     }).filter(item => item !== undefined)
     let selectedCustomFields = customFields.map(customField => {
-      if (customField.selected) return customField.key
+      if (customField.selected) return customField.key //crucial
     }).filter(item => item !== undefined)
-
 
     let selectedDynamicFieldsDimensions = []
     selectedCustomFields.map(scf => {
@@ -121,7 +121,6 @@ export const FilterBar = ({ executeQuery, queryStatus }) => {
         measureArrForSelectedFields.push(measure)
 
         let label = startCase(sdfd.label + " " + sm.substring(sm.lastIndexOf('.') + 1, sm.length).replaceAll("_", " "))
-
         let copy = { ...dynamicFieldMeasureTemplate }
         copy.measure = measure;
         copy.based_on = sm;

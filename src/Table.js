@@ -35,13 +35,15 @@ export const FormattedTable = ({ queryResults }) => {
   const sliceEndValue = currentPage == 1 ? 26 : (currentPage) * rowsPerPage + 1;
   const dataSubArray = data.slice(sliceStartValue, sliceEndValue)
   return (
-    <>
-      <Table>
-        <FormattedTableHead data={data} />
-        <FormattedTableBody data={dataSubArray} />
-      </Table >
+    <SpaceVertical style={{ width: "95%" }}>
+      <SpaceVertical m="large" style={{ maxHeight: "450px", overflow: "scroll" }}>
+        <Table >
+          <FormattedTableHead data={data} />
+          <FormattedTableBody data={dataSubArray} />
+        </Table >
+      </SpaceVertical>
       <TablePagination currentPage={currentPage} setCurrentPage={setCurrentPage} totalPages={totalPages} />
-    </>
+    </SpaceVertical>
   )
 }
 
@@ -67,7 +69,7 @@ const FormattedTableBody = ({ data }) => {
     <TableBody>
       {data.map((row, rowIndex) => {
         return (
-          <TableRow key={`TableRow-${rowIndex}`}>
+          <TableRow key={`TableRow-${rowIndex}`} style={rowIndex % 2 == 0 ? { backgroundColor: "#f2f2f2" } : {}}>
             {Object.keys(row).map((key, cellIndex) => {
               return (
                 <TableDataCell key={`TableDataCell-${rowIndex}-${cellIndex}`} >
@@ -84,10 +86,12 @@ const FormattedTableBody = ({ data }) => {
 
 const TablePagination = ({ currentPage, setCurrentPage, totalPages }) => {
   return (
-    <Pagination
-      current={currentPage}
-      pages={totalPages}
-      onChange={setCurrentPage}
-    />
+    <SpaceVertical align="end">
+      <Pagination
+        current={currentPage}
+        pages={totalPages}
+        onChange={setCurrentPage}
+      />
+    </SpaceVertical>
   )
 }

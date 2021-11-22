@@ -96,7 +96,8 @@ export const Home = () => {
               <SpaceVertical m="large"><Heading>Query executing!</Heading>
                 <ProgressCircular />
               </SpaceVertical>
-              : queryStatus === 'complete' && queryResults ? <FormattedTable queryResults={queryResults}></FormattedTable>
+              : queryStatus === 'complete' && queryResults ?
+                <FormattedTable queryResults={queryResults}></FormattedTable>
                 : ""
 
           }
